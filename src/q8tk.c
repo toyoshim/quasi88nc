@@ -409,7 +409,8 @@ int	q8tk_set_kanjicode( int code )
 
   if( code != Q8TK_KANJI_ANK &&
       code != Q8TK_KANJI_EUC &&
-      code != Q8TK_KANJI_SJIS ) code = Q8TK_KANJI_ANK;
+      code != Q8TK_KANJI_SJIS &&
+      code != Q8TK_KANJI_UTF8) code = Q8TK_KANJI_ANK;
 
   kanji_code = code;
 
