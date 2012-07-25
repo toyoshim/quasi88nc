@@ -78,11 +78,11 @@ int osd_set_dir_lcfg( const char *d ){ return set_new_dir( d, dir_l_cfg ); }
  *		0 … ASCII のみ
  *		1 … 日本語EUC
  *		2 … シフトJIS
+ *              3 … UTF-8
  *****************************************************************************/
 int	osd_kanji_code( void )
 {
-  if( file_coding == 1 ) return 2;
-  else                   return 1;
+  return 3;
 }
 
 
