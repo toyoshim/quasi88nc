@@ -7,6 +7,7 @@
 /*	menu_screen[][]に然るべき値をセットする。			*/
 /*									*/
 /************************************************************************/
+#include <iconv.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -24,6 +25,7 @@ int		menu_screen_current;
 T_Q8GR_SCREEN	menu_screen[2][ Q8GR_SCREEN_Y ][ Q8GR_SCREEN_X ];
 static	int	menu_mouse_x;
 static	int	menu_mouse_y;
+static  iconv_t iconv_desc = 0;
 
 
 /********************************************************/
@@ -41,6 +43,13 @@ void	q8gr_init( void )
     }
   }
   menu_screen_current = 0;
+
+  if (!iconv_desc)
+#if defined(__darwin__)
+    iconv_desc = iconv_open("EUC-JP", "UTF-8-MAC");
+#else
+    iconv_desc = iconv_open("EUC-JP", "UTF-8");
+#endif
 
   q8gr_clear_screen();
 }
@@ -834,7 +843,21 @@ int	q8gr_strings( int x, int y, int fg, int bg, int reverse, int underline,
   unsigned int		h, c, type, addr, rev;
   int w, pos = 0;
   int count = 0;
+  char outbuf[256];
 
+  /* - - - - UTF-8 - - - - */
+  /* UTF-8-MACでは濁点・半濁点が付いた文字が文字コード＋濁点コードで
+     表現されるため、一文字分ずつ変換するのは若干複雑なので、ここで
+     一括変換する。256文字以上はどのみち表示できないので気にしない。 */
+  if ( code == Q8TK_KANJI_UTF8 ) {
+    size_t inlen = strlen(str) + 1;
+    const char* inptr = str;
+    size_t outlen = 256;
+    char* outptr = outbuf;
+    iconv(iconv_desc, &inptr, &inlen, &outptr, &outlen);
+    code = Q8TK_KANJI_EUC;
+    p = (const unsigned char *)outbuf;
+  }
 
   /* -------- width バイト分、表示 (width==0なら全て表示) -------- */
 

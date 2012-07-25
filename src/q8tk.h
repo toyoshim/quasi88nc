@@ -386,6 +386,7 @@ enum{				/* 表示可能な漢字コード */
   Q8TK_KANJI_ANK,
   Q8TK_KANJI_EUC,
   Q8TK_KANJI_SJIS,
+  Q8TK_KANJI_UTF8,
   Q8TK_KANJI_END
 };
 
