@@ -45,7 +45,7 @@ void	q8gr_init( void )
   menu_screen_current = 0;
 
   if (!iconv_desc)
-#if defined(__darwin__)
+#if defined(__APPLE__)
     iconv_desc = iconv_open("EUC-JP", "UTF-8-MAC");
 #else
     iconv_desc = iconv_open("EUC-JP", "UTF-8");
