@@ -676,6 +676,10 @@ static	int	do_func( int func, int on );
 
 void	pc88_key( int code, int on )
 {
+  // TODO(toyoshim): Proper fix on following adhoc patch.
+  if (code == 95)
+    code = 171;
+
   if( get_emu_mode() == EXEC ){		/*===================================*/
 
     if( key_func[ code ] ){			/* 特殊処理割り当て済の場合 */
