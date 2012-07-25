@@ -92,9 +92,11 @@ static	int	open_display( int first_time );
 /************************************************************************/
 void	sdl_system_init( void )
 {
+#if !defined(__native_client__)
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 ){
     fprintf( stderr, "SDL Error: %s\n",SDL_GetError() );
   }
+#endif
 }
 
 
