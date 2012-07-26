@@ -76,7 +76,11 @@ static struct {
     int sound_r_pos;
 } sample; 
 
+static SDL_AudioCVT audio_cvt;
+static int audio_cvt_enabled = 0;
+
 /* callback function prototype */
+static void sdl_cvt_sound(void *unused, Uint8 *stream, int len);
 static void sdl_fill_sound(void *unused, Uint8 *stream, int len);
 
 /* public methods prototypes */
@@ -121,6 +125,7 @@ extern void *sdl_dsp_create(const void *flags)
    const struct sysdep_dsp_create_params *params = flags;
    const char *device = params->device;
    SDL_AudioSpec *audiospec;
+   SDL_AudioSpec obtained_audiospec;
    
    /* allocate the dsp struct */
    if (!(dsp = calloc(1, sizeof(struct sysdep_dsp_struct))))
@@ -176,7 +181,7 @@ extern void *sdl_dsp_create(const void *flags)
 #endif		/* forQUASI88 */
    
    /* set callback funcion */
-   audiospec->callback = sdl_fill_sound;
+   audiospec->callback = sdl_cvt_sound;
    
    audiospec->userdata = NULL;
    
@@ -191,9 +196,27 @@ extern void *sdl_dsp_create(const void *flags)
    if( ! SDL_WasInit( SDL_INIT_AUDIO ) ) SDL_InitSubSystem( SDL_INIT_AUDIO );
 #endif		/* forQUASI88 */
 
-   if (SDL_OpenAudio(audiospec, NULL) != 0) { 
+   if (SDL_OpenAudio(audiospec, &obtained_audiospec) != 0) { 
    		fprintf(stderr, "failed opening audio device\n");
    		return NULL;
+   }
+   if (audiospec->format != obtained_audiospec.format ||
+       audiospec->freq != obtained_audiospec.freq ||
+       audiospec->channels != obtained_audiospec.channels) {
+     fprintf(stderr, "obtained audiospec doesn't match to requested one\n");
+     fprintf(stderr, "convert frequency from %d to %d\n", audiospec->freq,
+	     obtained_audiospec.freq);
+     fprintf(stderr, "convert channels from %d to %d\n", audiospec->channels,
+	     obtained_audiospec.channels);
+     if (SDL_BuildAudioCVT(&audio_cvt, audiospec->format, audiospec->channels,
+			   audiospec->freq, obtained_audiospec.format,
+			   obtained_audiospec.channels,
+			   obtained_audiospec.freq) == 1) {
+       audio_cvt_enabled = 1;
+     } else {
+       audio_cvt_enabled = -1;
+       fprintf(stderr, "failed to build audio converter\n");
+     }
    }
    SDL_PauseAudio(0);
    
@@ -305,6 +328,19 @@ static void sdl_fill_sound(void *unused, Uint8 *stream, int len)
 	SDL_UnlockAudio();
 #endif		/* forQUASI88 */
 
+}
+
+static void sdl_cvt_sound(void *unused, Uint8 *stream, int len) 
+{
+  if (audio_cvt_enabled == 0)
+    sdl_fill_sound(unused, stream, len);
+  if (audio_cvt_enabled <= 0)
+    return;
+  int src_len = len / audio_cvt.len_mult;
+  sdl_fill_sound(unused, stream, src_len);
+  audio_cvt.buf = stream;
+  audio_cvt.len = src_len;
+  SDL_ConvertAudio(&audio_cvt);
 }
 
 #endif /* ifdef SYSDEP_DSP_SDL */
