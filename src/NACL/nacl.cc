@@ -2,12 +2,12 @@
 #include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/module.h>
 
-#include "SDL/SDL.h"
-#include "SDL/SDL_nacl.h"
+#include "SDL.h"
+#include "SDL_nacl.h"
 
 #include "naclfs.h"
 
-extern "C" int sdl_main(int argc, char** argv);
+extern "C" int SDL_main(int argc, char** argv);
 
 class Quasi88Instance : public pp::Instance {
  private:
@@ -17,7 +17,7 @@ class Quasi88Instance : public pp::Instance {
   static void* Start(void* arg) {
     const char* argv[] = { "Quasi88", NULL };
     puts("starting quasi88 main...");
-    sdl_main(1, const_cast<char**>(argv));
+    SDL_main(1, const_cast<char**>(argv));
     return 0;
   }
 
