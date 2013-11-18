@@ -1,18 +1,18 @@
 #include <fcntl.h>
 #include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/module.h>
+#include <ppapi/cpp/var.h>
 
 #include "SDL.h"
 #include "SDL_nacl.h"
 
 #include "naclfs.h"
 
-extern "C" int SDL_main(int argc, char** argv);
-
 class Quasi88Instance : public pp::Instance {
  private:
   pthread_t main_thread_;
   naclfs::NaClFs* naclfs_;
+  bool ready_;
 
   static void* Start(void* arg) {
     const char* argv[] = { "Quasi88", NULL };
@@ -24,13 +24,8 @@ class Quasi88Instance : public pp::Instance {
  public:
   explicit Quasi88Instance(PP_Instance instance)
       : pp::Instance(instance),
-        naclfs_(new naclfs::NaClFs(this)) {
-    naclfs_->set_trace(true);
-    open("/dev/stdin", O_RDONLY);
-    open("/dev/stdout", O_WRONLY);
-    open("/dev/stderr", O_WRONLY);
-    RequestInputEvents(PP_INPUTEVENT_CLASS_MOUSE |
-                       PP_INPUTEVENT_CLASS_KEYBOARD);
+	naclfs_(NULL),
+	ready_(false) {
   }
 
   virtual ~Quasi88Instance() {
@@ -38,20 +33,66 @@ class Quasi88Instance : public pp::Instance {
   }
 
   virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]) {
+    // Initialize naclfs.
+    naclfs_ = new naclfs::NaClFs(this);
+    naclfs_->Log("naclfs trace on");
+    naclfs_->set_trace(true);
+    naclfs_->Log("initializing stdio...");
+    open("/dev/stdin", O_RDONLY);
+    open("/dev/stdout", O_WRONLY);
+    open("/dev/stderr", O_WRONLY);
+    naclfs_->Log("done\n");
+    puts("stdout connect");
+
+    RequestInputEvents(PP_INPUTEVENT_CLASS_MOUSE);
+    RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
+
     SDL_NACL_SetInstance(pp_instance(), 640, 420);
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
     pthread_create(&main_thread_, NULL, Start, NULL);
+    ready_ = true;
     return true;
   }
 
   virtual bool HandleInputEvent(const pp::InputEvent& event) {
+    if (!ready_)
+      return true;
+
     SDL_NACL_PushEvent(event);
     return true;
   }
 
   virtual void HandleMessage(const pp::Var& var_message) {
-    naclfs_->HandleMessage(var_message);
+    if (!ready_)
+      return;
+
+    const char key[] = "_key_";
+    const char config[] = "_config_";
+    std::string message = var_message.AsString();
+    int code = -1;
+    if (message.compare(config) == 0)
+      code = 123;
+    else if (message.find(key) == 0)
+      code = atoi(&message[sizeof(key) - 1]);
+    if (code > 0) {
+      printf("pseudo key input: %d\n", code);
+      pp::KeyboardInputEvent keydown(this,
+				     PP_INPUTEVENT_TYPE_KEYDOWN,
+				     0,
+				     0,
+				     code,
+				     pp::Var(""));
+      SDL_NACL_PushEvent(keydown);
+      pp::KeyboardInputEvent keyup(this,
+				   PP_INPUTEVENT_TYPE_KEYUP,
+				   0,
+				   0,
+				   code,
+				   pp::Var(""));
+      SDL_NACL_PushEvent(keyup);
+    } else {
+      naclfs_->HandleMessage(var_message);
+    }
   }
 };
 

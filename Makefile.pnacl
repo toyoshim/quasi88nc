@@ -344,7 +344,7 @@ BINDIR = /usr/local/bin
 
 # インクルードディレクトリ
 
-CFLAGS += -Isrc -Isrc/FUNIX -I../naclfs/src
+CFLAGS += -Isrc -Isrc/FUNIX `../naclfs/bin/naclfs-config --cflags pnacl`
 
 
 
