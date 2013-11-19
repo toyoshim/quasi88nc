@@ -231,7 +231,7 @@ SOUND_SDL		= 1
 #	FreeBSD  の場合、sdl12-config などにリネームされていることがあります
 
 OSNAME		= $(shell python $(NACL_SDK_ROOT)/tools/getos.py)
-SDL_CONFIG	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/usr/bin/sdl-config
+SDL_CONFIG	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/usr/bin/sdl-config
 
 
 
@@ -260,7 +260,7 @@ USE_FMGEN	= 1
 
 # コンパイラの指定
 
-CC	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-clang
+CC	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-clang
 
 
 # 必要に応じて、コンパイルオプション (最適化など) を指定してください
@@ -311,9 +311,9 @@ X11LIB		= -L/usr/X11R6/lib
 #	この設定が必要なのは、 fmgen を組み込む場合のみです。
 #	gcc はあるのに g++ が無い場合、「CXX = gcc」としてみてください。
 
-CXX	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-clang++
+CXX	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-clang++
 CXXFLAGS = $(CFLAGS)
-CXXLIBS	 = -lstdc++ -lppapi_cpp -lppapi -lnosys `../naclfs/bin/naclfs-config --libs pnacl` -Llibs/64 -lpiconv
+CXXLIBS	 = -lstdc++ -lppapi_cpp -lppapi -lnosys `../naclfs/bin/naclfs-config --libs pnacl` -Llibs/pnacl -lpiconv
 
 
 # リンカの設定
@@ -766,21 +766,21 @@ OBJECTS		= $(addprefix $(OBJDIR)/, $(OBJECT) )
 ###
 
 all:		$(OBJDIRS) \
-		$(PROGRAM_NAME)_x86-32.nexe \
-		$(PROGRAM_NAME)_x86-64.nexe \
+		$(PROGRAM_NAME)_x86_32.nexe \
+		$(PROGRAM_NAME)_x86_64.nexe \
 		$(PROGRAM_NAME)_arm.nexe
 
-$(PROGRAM_NAME)_x86-32.nexe: $(PROGRAM_NAME).pexe
-		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-translate -arch x86-32 -O3 -o $@ $<
+$(PROGRAM_NAME)_x86_32.nexe: $(PROGRAM_NAME).pexe
+		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-translate -arch x86-32 -O3 -o $@ $<
 
-$(PROGRAM_NAME)_x86-64.nexe: $(PROGRAM_NAME).pexe
-		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-translate -arch x86-64 -O3 -o $@ $<
+$(PROGRAM_NAME)_x86_64.nexe: $(PROGRAM_NAME).pexe
+		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-translate -arch x86-64 -O3 -o $@ $<
 
 $(PROGRAM_NAME)_arm.nexe: $(PROGRAM_NAME).pexe
-		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-translate -arch arm -O3 -o $@ $<
+		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-translate -arch arm -O3 -o $@ $<
 
 $(PROGRAM_NAME).pexe: $(PROGRAM)
-		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-finalize -o $@ $<
+		$(NACL_SDK_ROOT)/toolchain/$(OSNAME)_pnacl/bin/pnacl-finalize -o $@ $<
 
 $(OBJDIRS):
 		-mkdir $@
