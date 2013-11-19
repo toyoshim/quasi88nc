@@ -271,7 +271,7 @@ CC	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-clang
 #	あります。PowerPC 系の gcc などがそうですが、この場合、-fsigned-char 
 #	を指定します。
 
-CFLAGS = -O2 -I$(NACL_SDK_ROOT)/include
+CFLAGS = -O2 -I$(NACL_SDK_ROOT)/include -Diconv_open=piconv_open -Diconv=piconv
 
 # gcc (PowerPC) での例
 # CFLAGS = -O2 -fsigned-char
@@ -313,7 +313,7 @@ X11LIB		= -L/usr/X11R6/lib
 
 CXX	= $(NACL_SDK_ROOT)/toolchain/$(OSNAME)_x86_pnacl/newlib/bin/pnacl-clang++
 CXXFLAGS = $(CFLAGS)
-CXXLIBS	 = -lstdc++ -lppapi_cpp -lppapi -lnosys `../naclfs/bin/naclfs-config --libs pnacl`
+CXXLIBS	 = -lstdc++ -lppapi_cpp -lppapi -lnosys `../naclfs/bin/naclfs-config --libs pnacl` -Llibs/64 -lpiconv
 
 
 # リンカの設定
