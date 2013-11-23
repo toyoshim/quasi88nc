@@ -630,7 +630,7 @@ void	event_handle_init( void )
   case 2:					/* 101英語キーボード ? */
     memcpy( keysym2key88, keysym2key88_default, sizeof(keysym2key88_default) );
 
-#if	defined( QUASI88_FUNIX )
+#if	defined( QUASI88_FUNIX ) && !defined(__native_client__)
 
     if( keyboard_type == 1 ){ map = remapping_x11_106;	bin = binding_106; }
     else                    { map = remapping_x11_101;	bin = binding_101; }
