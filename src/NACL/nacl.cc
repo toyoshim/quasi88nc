@@ -13,6 +13,7 @@ class Quasi88Instance : public pp::Instance {
   pthread_t main_thread_;
   naclfs::NaClFs* naclfs_;
   bool ready_;
+  bool started_;
 
   static void* Start(void* arg) {
     const char* argv[] = { "Quasi88", NULL };
@@ -25,7 +26,8 @@ class Quasi88Instance : public pp::Instance {
   explicit Quasi88Instance(PP_Instance instance)
       : pp::Instance(instance),
 	naclfs_(NULL),
-	ready_(false) {
+	ready_(false),
+	started_(false) {
   }
 
   virtual ~Quasi88Instance() {
@@ -49,7 +51,6 @@ class Quasi88Instance : public pp::Instance {
 
     SDL_NACL_SetInstance(pp_instance(), 640, 420);
 
-    pthread_create(&main_thread_, NULL, Start, NULL);
     ready_ = true;
     return true;
   }
@@ -66,14 +67,21 @@ class Quasi88Instance : public pp::Instance {
     if (!ready_)
       return;
 
+    const char start[] = "_start_";
     const char key[] = "_key_";
     const char config[] = "_config_";
     std::string message = var_message.AsString();
     int code = -1;
-    if (message.compare(config) == 0)
+    if (!started_ && message.compare(start) == 0) {
+      started_ = true;
+      pthread_create(&main_thread_, NULL, Start, NULL);
+      return;
+    }
+    if (message.compare(config) == 0) {
       code = 123;
-    else if (message.find(key) == 0)
+    } else if (message.find(key) == 0) {
       code = atoi(&message[sizeof(key) - 1]);
+    }
     if (code > 0) {
       printf("pseudo key input: %d\n", code);
       pp::KeyboardInputEvent keydown(this,
