@@ -37,14 +37,11 @@ class Quasi88Instance : public pp::Instance {
   virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]) {
     // Initialize naclfs.
     naclfs_ = new naclfs::NaClFs(this);
-    naclfs_->Log("naclfs trace on");
-    naclfs_->set_trace(true);
-    naclfs_->Log("initializing stdio...");
+    naclfs_->set_trace(false);
+    naclfs_->set_filesystem_type(PP_FILESYSTEMTYPE_LOCALPERSISTENT);
     open("/dev/stdin", O_RDONLY);
     open("/dev/stdout", O_WRONLY);
     open("/dev/stderr", O_WRONLY);
-    naclfs_->Log("done\n");
-    puts("stdout connect");
 
     RequestInputEvents(PP_INPUTEVENT_CLASS_MOUSE);
     RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
