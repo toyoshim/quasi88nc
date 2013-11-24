@@ -1,0 +1,49 @@
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="bootstrap-3.0.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-3.0.2/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="docs-assets/css/docs.css">
+<script src="jquery.js"></script>
+<script src="bootstrap-3.0.2/js/bootstrap.min.js"></script>
+<title>QUASI88 NC</title>
+</head>
+<body style="margin:0px;padding:0px;position:relative;">
+<!---- settings ---->
+<div id="settings" class="container" style="margin:0px;padding:0px;display:block;width:640px;height:420px;position:absolute;z-index:2;background:#fff;">
+<div class="bs-callout bs-callout-warning" style="margin:0px;padding:10px;"><h4>ROMを選択してください</h4></div>
+<div class="bs-callout" style="margin:0px;padding:10px;"><table class="table table-striped" style="font-size:small;margin:0px;">
+<tr><td style="padding:1px;">N88 BASIC ROM</td><td style="padding:1px;">32KB</td><td style="padding:1px;">N88.ROM</td><td id="rom1s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom1" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">N88 BASIC 拡張ROM バンク 0</td><td style="padding:1px;">8KB</td><td style="padding:1px;">N88EXT0.ROM</td><td id="rom2s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom2" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">N88 BASIC 拡張ROM バンク 1</td><td style="padding:1px;">8KB</td><td style="padding:1px;">N88EXT1.ROM</td><td id="rom3s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom3" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">N88 BASIC 拡張ROM バンク 2</td><td style="padding:1px;">8KB</td><td style="padding:1px;">N88EXT2.ROM</td><td id="rom4s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom4" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">N88 BASIC 拡張ROM バンク 3</td><td style="padding:1px;">8KB</td><td style="padding:1px;">N88EXT3.ROM</td><td id="rom5s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom5" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">N BASIC ROM</td><td style="padding:1px;">32KB</td><td id="rom5" style="padding:1px;">N88N.ROM</td><td id="rom6s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom6" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+  <tr><td style="padding:1px;">サブシステム (FDDユニット) ROM</td><td style="padding:1px;">2KB/8KB</td><td style="padding:1px;">N88SUB.ROM</td><td id="rom7s" style="padding:1px;">-</td><td style="padding:1px;"><button id="rom7" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">漢字ROM JIS第1水準</td><td style="padding:1px;">128KB</td><td style="padding:1px;">N88KNJ1.ROM</td><td id="rom8s" style="padding:1px;">optional</td><td style="padding:1px;"><button id="rom8" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">漢字ROM JIS第2水準</td><td style="padding:1px;">128KB</td><td style="padding:1px;">N88KNJ2.ROM</td><td id="rom9s" style="padding:1px;">optional</td><td style="padding:1px;"><button id="rom9" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">辞書ROM</td><td style="padding:1px;">512KB</td><td style="padding:1px;">N88JISHO.ROM</td><td id="rom10s" style="padding:1px;">optional</td><td style="padding:1px;"><button id="rom10" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td></tr>
+<tr><td style="padding:1px;">フォントイメージ</td><td style="padding:1px;">2KB</td><td style="padding:1px;">FONT.ROM</td><td id="rom11s" style="padding:1px;">optional</td><td style="padding:1px;"><button id="rom11" class="btn btn-primary" style="height:16pt;padding:1px 8px;">選択</button></td ></tr>
+</table></div>
+<button id="ready" class="btn btn-success" style="margin-left:555px;" disabled="true">完了</button>
+</div>
+
+<!---- nacl main ---->
+<div id="nacl" style="margin:0px;padding:0px;display:block;_visibility:hidden;position:absolute;z-index:1;">
+<embed id="nacl_module" width="640" height="420" src="nacl/quasi88.nmf" type="application/x-pnacl"></embed>
+</div>
+
+<!---- status ---->
+<div id="status" style="margin:0px;padding:0px;position:absolute;top:403px;left:150px;width:340px;height:16px;z-index:2;">
+<div id="progress" class="progress progress-striped active" style="height:16px;">
+  <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+  </div>
+</div>
+<button id="rom" type="button" class="btn btn-default" style="padding:0px;position:absolute;top:1px;left:350px;width:30px;height:14px;background:0;font-size:6px;">ROM</button>
+<button id="file" type="button" class="btn btn-default" style="padding:0px;position:absolute;top:1px;left:380px;width:30px;height:14px;background:0;font-size:6px;">FILE</button>
+<button id="menu" type="button" class="btn btn-default" style="padding:0px;position:absolute;top:1px;left:410px;width:30px;height:14px;background:0;font-size:6px;">MENU</button>
+</div>
+
+<script src="window.js"></script>
+</body>
+</html>

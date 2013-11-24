@@ -1,0 +1,18 @@
+{
+   "app": {
+      "background": {
+         "scripts": [ "main.js" ]
+      }
+   },
+   "icons": {
+      "512": "icon512.png",
+      "256": "icon256.png",
+      "128": "icon128.png",
+      "32": "icon32.png",
+      "16": "icon16.png"
+   },
+   "manifest_version": 2,
+   "name": "QUASI88 CR",
+   "version": "0.6.3.1",
+   "permissions": [ "fileSystem", "unlimited_storage" ]
+}
