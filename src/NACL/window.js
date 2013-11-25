@@ -30,7 +30,7 @@ var setRomReady = function() {
     return;
   romReady = true;
   if (naclReady)
-  	nacl.postMessage('_start_');
+    nacl.postMessage('_start_');
 }
 
 var romCheck = function() {
@@ -46,26 +46,26 @@ var romCheck = function() {
 
 var initRomChooser = function() {
   for (var i = 1; i <= 11; ++i) {
-  	var name = "#rom" + i;
-  	var button = document.querySelector(name);
-  	button._index = i - 1;
-  	button._name = roms[button._index];
+    var name = "#rom" + i;
+    var button = document.querySelector(name);
+    button._index = i - 1;
+    button._name = roms[button._index];
     romRoot.getFile(button._name, {create: false}, function() {
       var status = document.querySelector('#' + this.id + 's');
       status.innerText = 'found';
       if (romCheck())
         setRomReady();
     }.bind(button));
-  	button.addEventListener('click', function(e) {
-  	  if (!pfsReady)
-  	    return;
-  	  var options = {
-  	    type: 'openFile',
-  	    suggestedName: button._name,
-  	    accepts: [{extensions: ['rom']}],
-  	    acceptsAllTypes: false
-  	  };
-  	  chrome.fileSystem.chooseEntry(options, function(rentry) {
+    button.addEventListener('click', function(e) {
+      if (!pfsReady)
+        return;
+      var options = {
+        type: 'openFile',
+        suggestedName: this._name,
+        accepts: [{extensions: ['rom']}],
+        acceptsAllTypes: false
+      };
+      chrome.fileSystem.chooseEntry(options, function(rentry) {
         if (!rentry)
           return;
         romRoot.getFile(
@@ -81,9 +81,9 @@ var initRomChooser = function() {
             }.bind(this), perror.bind("file"));
           }.bind(this), perror.bind("createWriter"));
         }.bind(this), perror.bind("getFile"));
-  	  }.bind(this));
-  	}, false);
-  }
+      }.bind(this)); /* chooseEntry */
+    }, false); /* 'click' */
+  } /* for */
 }
 
 var pfs = null;
@@ -122,7 +122,7 @@ nacl.addEventListener('load', function(e) {
     return;
   naclReady = true;
   if (romReady)
-  	  nacl.postMessage('_start_');
+    nacl.postMessage('_start_');
 }, false);
 
 nacl.addEventListener('progress', function(e) {
@@ -151,8 +151,8 @@ file.addEventListener('click', function(e) {
     return;
   var options = {
     type: 'openFile',
-  	accepts: [{extensions: ['d88']}],
-  	acceptsAllTypes: false
+    accepts: [{extensions: ['d88']}],
+    acceptsAllTypes: false
   };
   chrome.fileSystem.chooseEntry(options, function(rentry) {
     if (!rentry)
@@ -164,8 +164,8 @@ file.addEventListener('click', function(e) {
         rentry.file(function(file) {
           writer.onwriteend = function(e) {};
           writer.write(file);
-        }.bind(this), perror.bind("file"));
-      }.bind(this), perror.bind("createWriter"));
-    }.bind(this), perror.bind("getFile"));
-  }.bind(this));
+        }, perror.bind("file"));
+      }, perror.bind("createWriter"));
+    }, perror.bind("getFile"));
+  });
 }, false);

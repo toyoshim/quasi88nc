@@ -11,8 +11,15 @@
       "32": "icon32.png",
       "16": "icon16.png"
    },
+   "file_handlers": {
+      "PC-8801 disk image": {
+         "title": "QUASI88",
+         "types": [ "application/x-d88-diskimage" ],
+         "extensions": [ "d88" ]
+      }
+   },
    "manifest_version": 2,
    "name": "QUASI88 CR",
-   "version": "0.6.3.1",
+   "version": "0.6.3.2",
    "permissions": [ "fileSystem", "unlimited_storage" ]
 }
