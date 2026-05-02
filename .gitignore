@@ -1,0 +1,3 @@
+# WASM build outputs (root-level only — src/WASM/web/ is the source tree)
+/obj.wasm/
+/web/

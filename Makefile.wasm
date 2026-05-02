@@ -1,0 +1,146 @@
+###############################################################################
+# QUASI88 WASM/Emscripten Makefile
+#
+# Layout mirrors src/NACL: platform-specific C/web code lives in
+# src/WASM/, tracked files under src/* are not modified. Builds against
+# Emscripten's real SDL2 port (-s USE_SDL=2). ASYNCIFY lets the
+# synchronous emulation loop yield to the browser via emscripten_sleep().
+#
+# Source layout:
+#   src/WASM/*.c              C platform layer
+#   src/WASM/web/*            HTML/JS/CSS/icons (committed)
+#
+# Build output:
+#   web/                      ready-to-serve bundle (gitignored)
+#                             - emcc emits quasi88.js + quasi88.wasm here
+#                             - src/WASM/web/ files are copied here
+#
+# Build:
+#     source /home/toyoshim/opt/emsdk/emsdk_env.sh
+#     make -f Makefile.wasm
+###############################################################################
+
+CC      = emcc
+CXX     = em++
+LD      = em++
+
+SDL_FLAGS   = -s USE_SDL=2
+ASYNC_FLAGS = -s ASYNCIFY -s ASYNCIFY_STACK_SIZE=131072
+
+COMMON_FLAGS = $(SDL_FLAGS) -O2 -g0
+
+DEFS = -DUSE_SOUND -DSOUND_SDL -DSYSDEP_DSP_SDL -DQUASI88_SDL \
+       -DUSE_FMGEN -DPI=M_PI \
+       -DSUPPORT_32BPP \
+       -DHAVE_GETTIMEOFDAY \
+       -DJOY_NOTHING \
+       -DROM_DIR='"/quasi88/ROM"' \
+       -DDISK_DIR='"/quasi88/DISK"' \
+       -DTAPE_DIR='"/quasi88/TAPE"' \
+       '-DINLINE=static __inline__'
+
+# LSB_FIRST is defined by src/WASM/config.h based on SDL_BYTEORDER, so we
+# don't need to pass it on the command line.
+
+# -Isrc/WASM first so config.h resolves to the WASM-specific one.
+# -Isrc/SDL is retained because getconf.c, getconf.h, help.h are reused
+# verbatim from there.
+INCLUDES = -Isrc/WASM -Isrc/SDL \
+           -Isrc -Isrc/FUNIX \
+           -Isrc/snddrv -Isrc/snddrv/src -Isrc/snddrv/src/sound \
+           -Isrc/snddrv/quasi88 -Isrc/snddrv/quasi88-SDL -Isrc/fmgen
+
+CFLAGS   = $(COMMON_FLAGS) $(DEFS) $(INCLUDES)
+# fmgen has a -1 → uint8 brace initializer that clang flags as a C++11
+# narrowing error. Downgrade to warning to keep src/ untouched.
+CXXFLAGS = $(CFLAGS) -Wno-c++11-narrowing
+
+LDFLAGS = $(COMMON_FLAGS) $(ASYNC_FLAGS) \
+          -s ALLOW_MEMORY_GROWTH=1 \
+          -s INITIAL_MEMORY=134217728 \
+          -s FORCE_FILESYSTEM=1 \
+          -lidbfs.js \
+          -s "EXPORTED_RUNTIME_METHODS=['FS','IDBFS','ENV','callMain','ccall']" \
+          -s "EXPORTED_FUNCTIONS=['_main','_quasi88_post_menu_event']" \
+          -s INVOKE_RUN=0 \
+          -Wl,--wrap=SDL_OpenAudio \
+          --pre-js $(WEBSRC)/pre.js
+
+OBJDIR = obj.wasm
+WEBSRC = src/WASM/web
+WEBDIR = web
+TARGET = $(WEBDIR)/quasi88.js
+
+# Static assets that go from src/WASM/web/ → web/ verbatim. pre.js is
+# excluded — it's an emcc input baked into quasi88.js via --pre-js, not
+# a separately served file.
+WEB_FILES = index.html app.js style.css manifest.json service-worker.js \
+            favicon.png icon-128.png icon-256.png icon-512.png
+WEB_OUT   = $(addprefix $(WEBDIR)/, $(WEB_FILES))
+
+# WASM-specific platform layer: SDL2 video/event/timing.
+# getconf.c is reused from src/SDL/ (byte-identical between platforms).
+PLATFORM_OBJS = \
+    $(OBJDIR)/src/WASM/main.o        \
+    $(OBJDIR)/src/WASM/graph.o       \
+    $(OBJDIR)/src/WASM/event.o       \
+    $(OBJDIR)/src/WASM/wait.o        \
+    $(OBJDIR)/src/WASM/audio_wrap.o  \
+    $(OBJDIR)/src/WASM/config_save.o \
+    $(OBJDIR)/src/SDL/getconf.o
+
+CORE_OBJS = $(addprefix $(OBJDIR)/src/, \
+    quasi88.o emu.o memory.o status.o \
+    pc88main.o crtcdmac.o soundbd.o pio.o screen.o intr.o \
+    pc88sub.o fdc.o image.o monitor.o basic.o \
+    menu.o menu-screen.o q8tk.o q8tk-glib.o suspend.o \
+    keyboard.o romaji.o pause.o \
+    z80.o z80-debug.o snapshot.o \
+    screen-32bpp.o screen-snapshot.o \
+    FUNIX/file-op.o)
+
+SND_OBJS = $(addprefix $(OBJDIR)/src/snddrv/, \
+    quasi88/mame-quasi88.o   \
+    quasi88/beepintf.o       \
+    quasi88/beep.o           \
+    src/sndintrf.o           \
+    src/sound/2203intf.o     \
+    src/sound/2608intf.o     \
+    src/sound/ay8910.o       \
+    src/sound/fm.o           \
+    src/sound/ymdeltat.o     \
+    src/sound/filter.o       \
+    src/sound/mixer.o        \
+    src/sound/streams.o      \
+    quasi88-SDL/snddrv-SDL.o \
+    quasi88-SDL/sdl.o)
+
+FMGEN_OBJS = $(addprefix $(OBJDIR)/src/fmgen/, \
+    2203fmgen.o 2608fmgen.o fmgen.o fmtimer.o opna.o psg.o)
+
+OBJS = $(PLATFORM_OBJS) $(CORE_OBJS) $(SND_OBJS) $(FMGEN_OBJS)
+
+all: $(WEBDIR) $(TARGET) $(WEB_OUT)
+
+$(WEBDIR):
+	@mkdir -p $@
+
+$(TARGET): $(OBJS) $(WEBSRC)/pre.js
+	$(LD) $(LDFLAGS) $(OBJS) -o $@
+
+# Copy each static web asset from src/WASM/web/ to web/ on change.
+$(WEBDIR)/%: $(WEBSRC)/% | $(WEBDIR)
+	cp $< $@
+
+$(OBJDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJDIR) $(WEBDIR)
+
+.PHONY: all clean
