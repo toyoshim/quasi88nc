@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=720, initial-scale=1">
+<meta name="theme-color" content="#0b0b0e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-256.png">
+<link rel="stylesheet" href="style.css?v=55">
+<title>QUASI88 Wasm</title>
+</head>
+<body>
+<div id="root">
+
+  <header>
+    <h1>QUASI88</h1>
+    <p class="tagline">PC-8801 emulator on the web</p>
+  </header>
+
+  <!-- Emulator surface: canvas + thin toolbar.
+       Sized to match the canvas so layout is identical in PWA and page modes. -->
+  <main id="stage">
+    <canvas id="canvas" width="640" height="420"></canvas>
+
+    <div id="toolbar">
+      <div id="progress" class="progress">
+        <div id="progress-bar" role="progressbar"
+             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <button id="rom"  type="button" class="tool-btn" title="Re-open ROM picker">ROM</button>
+      <button id="file" type="button" class="tool-btn" title="Mount disk image">DISK</button>
+      <button id="menu" type="button" class="tool-btn" title="QUASI88 menu">MENU</button>
+    </div>
+  </main>
+
+  <!-- ROM picker overlay: sits on top of the stage until the required ROMs are loaded. -->
+  <div id="settings" class="modal">
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>ROM を選択してください</h2>
+      </header>
+      <div class="modal-body">
+        <table class="rom-table">
+          <tr><td>N88 BASIC ROM</td>          <td>32KB</td>    <td>N88.ROM</td>      <td id="rom1s"  class="state">-</td>        <td><button id="rom1"  class="select-btn">選択</button></td></tr>
+          <tr><td>N88 BASIC 拡張ROM バンク 0</td><td>8KB</td>   <td>N88EXT0.ROM</td>  <td id="rom2s"  class="state">-</td>        <td><button id="rom2"  class="select-btn">選択</button></td></tr>
+          <tr><td>N88 BASIC 拡張ROM バンク 1</td><td>8KB</td>   <td>N88EXT1.ROM</td>  <td id="rom3s"  class="state">-</td>        <td><button id="rom3"  class="select-btn">選択</button></td></tr>
+          <tr><td>N88 BASIC 拡張ROM バンク 2</td><td>8KB</td>   <td>N88EXT2.ROM</td>  <td id="rom4s"  class="state">-</td>        <td><button id="rom4"  class="select-btn">選択</button></td></tr>
+          <tr><td>N88 BASIC 拡張ROM バンク 3</td><td>8KB</td>   <td>N88EXT3.ROM</td>  <td id="rom5s"  class="state">-</td>        <td><button id="rom5"  class="select-btn">選択</button></td></tr>
+          <tr><td>N BASIC ROM</td>            <td>32KB</td>    <td>N88N.ROM</td>     <td id="rom6s"  class="state">-</td>        <td><button id="rom6"  class="select-btn">選択</button></td></tr>
+          <tr><td>サブシステム ROM</td>        <td>2KB/8KB</td> <td>N88SUB.ROM</td>   <td id="rom7s"  class="state">-</td>        <td><button id="rom7"  class="select-btn">選択</button></td></tr>
+          <tr><td>漢字ROM 第1水準</td>         <td>128KB</td>   <td>N88KNJ1.ROM</td>  <td id="rom8s"  class="state">optional</td><td><button id="rom8"  class="select-btn">選択</button></td></tr>
+          <tr><td>漢字ROM 第2水準</td>         <td>128KB</td>   <td>N88KNJ2.ROM</td>  <td id="rom9s"  class="state">optional</td><td><button id="rom9"  class="select-btn">選択</button></td></tr>
+          <tr><td>辞書ROM</td>                <td>512KB</td>   <td>N88JISHO.ROM</td> <td id="rom10s" class="state">optional</td><td><button id="rom10" class="select-btn">選択</button></td></tr>
+          <tr><td>フォントイメージ</td>         <td>2KB</td>     <td>FONT.ROM</td>     <td id="rom11s" class="state">optional</td><td><button id="rom11" class="select-btn">選択</button></td></tr>
+        </table>
+      </div>
+      <footer class="modal-footer">
+        <button id="ready" class="primary-btn" disabled>完了</button>
+      </footer>
+    </div>
+  </div>
+
+</div>
+
+<input type="file" id="rom_input"  hidden>
+<input type="file" id="disk_input" hidden multiple>
+
+<script src="app.js?v=55"></script>
+<script src="quasi88.js?v=55"></script>
+</body>
+</html>

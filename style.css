@@ -1,0 +1,364 @@
+/* ---------------------------------------------------------------------------
+ * QUASI88 Web styles
+ *
+ * Two layouts:
+ *   - Page mode (default): centered card on a dark background, header/title
+ *     visible. Optimised for desktop browser tabs.
+ *   - PWA standalone: window chrome only — no card, no header, just the
+ *     emulator surface. Triggered by @media (display-mode: standalone)
+ *     and a `.standalone` body class set from app.js for browsers whose
+ *     match query lags load events.
+ * --------------------------------------------------------------------------- */
+
+:root {
+    --bg:          #0b0b0e;
+    --card:        #15161c;
+    --border:      rgba(255, 255, 255, 0.08);
+    --text:        #f1f5f9;
+    --muted:       #94a3b8;
+    --accent:      #6366f1;
+    --accent-hi:   #818cf8;
+    --danger:      #ef4444;
+    --success:     #10b981;
+    --shadow:      0 24px 48px -16px rgba(0, 0, 0, 0.6),
+                   0 0 0 1px rgba(255, 255, 255, 0.04);
+    --radius:      10px;
+
+    /* Display scale: 1 = 640x420 native, 2 = 1280x840. JS sets this. */
+    --scale:       1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+/* ---- Page-mode card -------------------------------------------------------- */
+
+#root {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    width: calc(640px * var(--scale));   /* follows canvas */
+    max-width: 100%;
+}
+
+header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.015);
+}
+header h1 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+header .tagline {
+    margin: 2px 0 0 0;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+
+/* ---- Emulator stage -------------------------------------------------------- */
+
+#stage {
+    position: relative;
+    width: calc(640px * var(--scale));
+    max-width: 100%;
+    background: #000;
+}
+
+#canvas {
+    display: block;
+    width:  calc(640px * var(--scale));
+    height: calc(420px * var(--scale));
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #000;
+}
+
+#toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #0e0e13;
+    border-top: 1px solid var(--border);
+    height: 32px;
+}
+
+.progress {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-hi) 100%);
+    transition: width 0.2s ease;
+}
+
+.tool-btn {
+    appearance: none;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 10px;
+    height: 22px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.tool-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+.tool-btn:active { transform: translateY(1px); }
+
+/* ---- ROM picker modal ------------------------------------------------------ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+}
+
+.modal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+.modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(99, 102, 241, 0.08);
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+.modal-body {
+    padding: 8px 20px;
+    overflow-y: auto;
+}
+.modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.rom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.rom-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+.rom-table td:first-child { color: var(--text); }
+.rom-table td:nth-child(2),
+.rom-table td:nth-child(3) { color: var(--muted); font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 0.7rem; }
+
+.state {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.state:not(:empty)[id] {
+    /* default = "-" */
+}
+
+.primary-btn {
+    appearance: none;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 24px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.primary-btn:hover:not(:disabled) { background: var(--accent-hi); }
+.primary-btn:disabled {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+.select-btn {
+    appearance: none;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--accent-hi);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 4px;
+    padding: 3px 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.select-btn:hover {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Right-click context menu --------------------------------------------- */
+
+#context-menu {
+    position: fixed;
+    min-width: 180px;
+    padding: 4px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    font-size: 0.78rem;
+    z-index: 1000;
+    display: none;
+}
+#context-menu.open { display: block; }
+#context-menu .item {
+    padding: 6px 14px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+#context-menu .item:hover { background: rgba(99, 102, 241, 0.15); }
+#context-menu .item.checked::before {
+    content: '✓';
+    color: var(--accent-hi);
+    margin-right: 6px;
+}
+#context-menu .item:not(.checked)::before {
+    content: '';
+    margin-right: 18px;  /* keep label alignment */
+}
+#context-menu .sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
+
+/* ---- Fullscreen ----------------------------------------------------------- */
+
+#stage:fullscreen {
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#stage:fullscreen #canvas {
+    /* CSS-only contain: pick whichever dimension fits, preserve 640:420
+     * ratio. !important is needed because the canvas's width/height also
+     * resolve via the --scale calc() above (same specificity, but order
+     * doesn't help across pseudo-class boundary). */
+    width:  min(100vw, 100vh * 640 / 420) !important;
+    height: min(100vh, 100vw * 420 / 640) !important;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+#stage:fullscreen #toolbar { display: none; }
+
+/* ---- Standalone (PWA) overrides ------------------------------------------ *
+ * Window itself becomes the frame. JS attempts window.resizeTo() to match
+ * the user-selected scale, but browsers may silently deny the call in PWA
+ * mode. To stay usable in either case, the canvas always letterbox-fits
+ * within the available window space — if resize succeeded we get a clean
+ * pixel-perfect fit, if it didn't the user just sees the canvas shrunk
+ * to the actual window with black bars.
+ *
+ * Both the display-mode media query and the JS-applied .standalone class
+ * apply so browsers with delayed matchMedia resolution still get styled.
+ */
+@media all and (display-mode: standalone) {
+    body { padding: 0; }
+}
+body.standalone { padding: 0; }
+body.standalone header { display: none; }
+body.standalone #root {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+}
+body.standalone #stage {
+    flex: 1;
+    width: 100vw;
+    max-width: 100vw;
+    /* Grid lays out canvas (1fr) and toolbar (auto) vertically, so the
+     * toolbar always sits below the canvas instead of being treated as
+     * a flex sibling pushed to the right. */
+    display: grid;
+    grid-template-rows: 1fr auto;
+    grid-template-columns: 1fr;
+}
+body.standalone #canvas {
+    /* Letterbox-fit inside the 1fr cell. !important beats the
+     * page-mode calc(640px * --scale) rule on this same element.
+     * (100vh - 32px) accounts for the toolbar row below. */
+    align-self: center;
+    justify-self: center;
+    width:  min(100vw,              calc((100vh - 32px) * 640 / 420)) !important;
+    height: min(calc(100vh - 32px), calc( 100vw          * 420 / 640)) !important;
+}
+body.standalone #toolbar { width: 100vw; }

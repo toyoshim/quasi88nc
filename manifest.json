@@ -1,0 +1,14 @@
+{
+  "name": "QUASI88 Wasm",
+  "short_name": "QUASI88",
+  "description": "PC-8801 emulator on WebAssembly",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0b0e",
+  "theme_color": "#0b0b0e",
+  "icons": [
+    { "src": "icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "icon-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
