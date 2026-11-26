@@ -212,17 +212,19 @@
 
         var img = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         var stride = canvas.width * 4;
-        // Sample 8 scanlines out of the 16px tall half-width cell (rows 1..14)
-        var SAMPLE_Y = [1, 3, 5, 7, 9, 11, 13, 14];
-
+        // Combine each vertical pair (2r, 2r+1) so 1px horizontal strokes
+        // are never dropped when downsampling 8x16 glyphs to 8x8.
         for (var c = 0x20; c < 0xE0; c++) {
             if (c >= 0x7F && c <= 0xA0) continue;
             var ox = c * 8;
             for (var r = 0; r < 8; r++) {
-                var rowOff = SAMPLE_Y[r] * stride + ox * 4;
+                var rowOff0 = (r * 2) * stride + ox * 4;
+                var rowOff1 = (r * 2 + 1) * stride + ox * 4;
                 var bits = 0;
                 for (var x = 0; x < 8; x++) {
-                    if (img[rowOff + x * 4 + 3] >= 96) bits |= (0x80 >> x);
+                    if (img[rowOff0 + x * 4 + 3] >= 96 || img[rowOff1 + x * 4 + 3] >= 96) {
+                        bits |= (0x80 >> x);
+                    }
                 }
                 rom[c * 8 + r] = bits;
             }
