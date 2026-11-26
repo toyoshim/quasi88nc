@@ -1,13 +1,14 @@
 // Bump CACHE_NAME (or its suffix) whenever app.js / quasi88.js / quasi88.wasm
 // change so old clients pick up the new build. Asset URLs are cached with
 // the same ?v= query string used by index.html and app.js's locateFile().
-const VERSION = '55';
+const VERSION = '56';
 // style.css is now part of the cached set; bumping VERSION evicts the old.
 const CACHE_NAME = 'quasi88-v' + VERSION;
 const ASSETS = [
     'index.html',
     'manifest.json',
     'style.css?v=' + VERSION,
+    'norom.js?v=' + VERSION,
     'app.js?v=' + VERSION,
     'quasi88.js?v=' + VERSION,
     'quasi88.wasm?v=' + VERSION
@@ -30,6 +31,8 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+    // Let cross-origin requests (e.g. external fd1/fd2 URLs, WebFonts) bypass SW cache.
+    if (new URL(e.request.url).origin !== self.location.origin) return;
     e.respondWith(
         caches.match(e.request).then((response) => response || fetch(e.request))
     );

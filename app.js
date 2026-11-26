@@ -7,7 +7,7 @@
  */
 
 (function() {
-    var VERSION = '55';
+    var VERSION = '56';
 
     // Standalone (installed PWA) detection.
     //
@@ -61,6 +61,18 @@
     var runtimeReady = false;
     var currentRomTargetIndex = -1;
 
+    // Optional URL query launch parameters:
+    //   ?rom=no&fd1=<url>&fd2=<url>
+    // Default (no params) keeps the original ROM picker & IDBFS flow untouched.
+    var urlParams = new URLSearchParams(window.location.search);
+    var isNoRomMode = (urlParams.get('rom') === 'no');
+    var queryFd1 = urlParams.get('fd1');
+    var queryFd2 = urlParams.get('fd2');
+    var queryDiskPaths = [];
+    if (isNoRomMode && settingsElement) {
+        settingsElement.style.display = 'none';
+    }
+
     var roms = [
         "N88.ROM", "N88EXT0.ROM", "N88EXT1.ROM", "N88EXT2.ROM", "N88EXT3.ROM",
         "N88N.ROM", "N88SUB.ROM", "N88KNJ1.ROM", "N88KNJ2.ROM", "N88JISHO.ROM",
@@ -104,7 +116,13 @@
             // already populated /quasi88 before this fires.
             console.log("Runtime initialized; FS ready.");
             runtimeReady = true;
-            checkAllRoms();
+            if (isNoRomMode) {
+                bootNoRomMode();
+            } else if (queryFd1 || queryFd2) {
+                fetchQueryDisks().then(function() { checkAllRoms(); });
+            } else {
+                checkAllRoms();
+            }
         }
     };
     window.Module = Module;
@@ -219,19 +237,79 @@
         return 48000; // most browsers default here
     }
 
+    async function fetchQueryDisks() {
+        queryDiskPaths = [];
+        var urls = [queryFd1, queryFd2];
+        if (!urls[0] && !urls[1]) return;
+        var FS = Module.FS;
+        if (window.Quasi88NoRom && window.Quasi88NoRom.mkdirp) {
+            window.Quasi88NoRom.mkdirp(FS, '/tmp/media');
+        } else {
+            try { FS.mkdir('/tmp/media'); } catch (e) {}
+        }
+        for (var k = 0; k < urls.length; k++) {
+            var u = urls[k];
+            if (!u) continue;
+            try {
+                var resolved = new URL(u, window.location.href);
+                if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
+                    throw new Error('Unsupported URL protocol: ' + resolved.protocol);
+                }
+                console.log('[media] Fetching fd' + (k + 1) + ': ' + resolved.href);
+                var fetchOpts = (resolved.origin !== window.location.origin)
+                    ? { mode: 'cors', credentials: 'omit' }
+                    : {};
+                var resp = await fetch(resolved.href, fetchOpts);
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                var buf = new Uint8Array(await resp.arrayBuffer());
+                var rawName = decodeURIComponent(resolved.pathname.split('/').pop() || '');
+                if (!rawName) rawName = 'fd' + (k + 1) + '.d88';
+                var safeName = 'fd' + (k + 1) + '_' + rawName.replace(/[^A-Za-z0-9._-]/g, '_');
+                var path = '/tmp/media/' + safeName;
+                FS.writeFile(path, buf);
+                queryDiskPaths.push(path);
+                console.log('[media] Mounted ' + path + ' (' + buf.length + ' bytes)');
+            } catch (err) {
+                console.error('[media] Failed to fetch fd' + (k + 1) + ' (' + u + '):', err);
+            }
+        }
+    }
+
+    async function bootNoRomMode() {
+        try {
+            if (settingsElement) settingsElement.style.display = 'none';
+            var romDir = '/tmp/norom';
+            await Promise.all([
+                window.Quasi88NoRom.install(Module.FS, romDir),
+                fetchQueryDisks()
+            ]);
+            startEmulator({ romDir: romDir, extraArgs: ['-v2'] });
+        } catch (err) {
+            console.error('[norom] Failed to start in rom=no mode:', err);
+        }
+    }
+
     var emulatorStarted = false;
-    function startEmulator() {
+    function startEmulator(opts) {
         if (emulatorStarted) return;
         if (!runtimeReady) return;
         emulatorStarted = true;
+        opts = opts || {};
         var rate = nativeAudioRate();
-        console.log("Starting emulator at " + rate + " Hz");
+        var romDir = opts.romDir || '/quasi88/ROM';
+        console.log("Starting emulator at " + rate + " Hz (romdir=" + romDir + ")");
         var args = [
-            '-romdir', '/quasi88/ROM',
+            '-romdir', romDir,
             '-diskdir', '/quasi88/DISK',
             '-tapedir', '/quasi88/TAPE',
             '-samplefreq', String(rate)
         ];
+        if (opts.extraArgs && opts.extraArgs.length) {
+            args = args.concat(opts.extraArgs);
+        }
+        if (queryDiskPaths.length) {
+            args = args.concat(queryDiskPaths);
+        }
         if (typeof Module.callMain === 'function') {
             Module.callMain(args);
         } else {
