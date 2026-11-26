@@ -7,7 +7,7 @@
  */
 
 (function() {
-    var VERSION = '56';
+    var VERSION = '57';
 
     // Standalone (installed PWA) detection.
     //
@@ -283,7 +283,7 @@
                 window.Quasi88NoRom.install(Module.FS, romDir),
                 fetchQueryDisks()
             ]);
-            startEmulator({ romDir: romDir, extraArgs: ['-v2'] });
+            startEmulator({ romDir: romDir, extraArgs: ['-v2', '-nofont'] });
         } catch (err) {
             console.error('[norom] Failed to start in rom=no mode:', err);
         }

@@ -1,7 +1,7 @@
 // Bump CACHE_NAME (or its suffix) whenever app.js / quasi88.js / quasi88.wasm
 // change so old clients pick up the new build. Asset URLs are cached with
 // the same ?v= query string used by index.html and app.js's locateFile().
-const VERSION = '56';
+const VERSION = '57';
 // style.css is now part of the cached set; bumping VERSION evicts the old.
 const CACHE_NAME = 'quasi88-v' + VERSION;
 const ASSETS = [
