@@ -74,8 +74,9 @@ TARGET = $(WEBDIR)/quasi88.js
 # Static assets that go from src/WASM/web/ → web/ verbatim. pre.js is
 # excluded — it's an emcc input baked into quasi88.js via --pre-js, not
 # a separately served file.
-WEB_FILES = index.html app.js style.css manifest.json service-worker.js \
-            favicon.png icon-128.png icon-256.png icon-512.png
+WEB_FILES = index.html app.js norom.js style.css manifest.json service-worker.js \
+            favicon.png icon-128.png icon-256.png icon-512.png \
+            examples/bbb88_demo.d88
 WEB_OUT   = $(addprefix $(WEBDIR)/, $(WEB_FILES))
 
 # WASM-specific platform layer: SDL2 video/event/timing.
@@ -130,6 +131,7 @@ $(TARGET): $(OBJS) $(WEBSRC)/pre.js
 
 # Copy each static web asset from src/WASM/web/ to web/ on change.
 $(WEBDIR)/%: $(WEBSRC)/% | $(WEBDIR)
+	@mkdir -p $(dir $@)
 	cp $< $@
 
 $(OBJDIR)/%.o: %.c
